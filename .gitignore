@@ -1,3 +1,5 @@
 .env
 volumes/mysql/*
+!volumes/mysql/.gitkeep
 volumes/www/*
+!volumes/www/.gitkeep
