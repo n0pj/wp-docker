@@ -1,0 +1,64 @@
+version: "3.9"
+networks:
+  network:
+    driver: bridge
+services:
+  wordpress:
+    image: wordpress:6.0.2-php8.1-apache
+    ports:
+      - "80:80"
+    # environment:
+    #   WORDPRESS_DB_HOST: ${DB_HOST}
+    #   WORDPRESS_DB_USER: ${DB_USER}
+    #   WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+    #   WORDPRESS_DB_NAME: ${DB_NAME}
+    #   WORDPRESS_S3_KEY_ID: ${S3_KEY_ID}
+    #   WORDPRESS_S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+    environment:
+      WORDPRESS_DB_HOST: ${DB_HOST}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_S3_KEY_ID: ${S3_KEY_ID}
+      WORDPRESS_S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+    volumes:
+      - ./volumes/www/wordpress:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - network
+  mysql:
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: database
+      MYSQL_PASSWORD: docker
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: docker
+      TZ: Asia/Tokyo
+    image: "mysql:8"
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+    networks:
+      - network
+    ports:
+      - "13306:3306"
+    volumes:
+      - "../volumes/mysql/pool:/var/lib/mysql"
+      - "../volumes/mysql/conf.d:/etc/mysql/conf.d"
+      - "../volumes/mysql/sql:/docker-entrypoint-initdb.d"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - PMA_USER=docker
+      - PMA_PASSWORD=docker
+    ports:
+      - "8080:80"
+    volumes:
+      - /sessions
+    networks:
+      - network
